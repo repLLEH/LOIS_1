@@ -1,4 +1,3 @@
-
 class Lexem:
     def __init__(self,lexem_type,input_string):
         self.lexemType = lexem_type
@@ -88,7 +87,7 @@ def is_formula(lexList):
                 else:
                     return False
             elif lexList[i].lexemType == 'symbol':
-                if (lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence') and (lexList[i-1].lexemType == 'neg' or lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
+                if (lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence') and ( lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
                     return False
                 elif lexList[i+1].lexemType == 'close_bracket' and (lexList[i-1].lexemType == 'neg' or lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
                     continue
@@ -143,72 +142,112 @@ def is_formula(lexList):
 class TestParserException(Exception):
     pass
 
-# input_string='((A~A~A))'
-# lexList = lexAnalyze(input_string,lexem_type)
-# for lex in lexList:
-#     print(lex.lexemType + '   ::=   ' + lex.value)
-# print(is_formula(lexList))
-
 # formula='A~A'
 # lexList = lexAnalyze(formula,lexem_type)
 # print(is_formula(lexList))
+def is_CNF(lexList):
+    if is_formula(lexList):
+        bracket_counter=0
+        for i in range(len(lexList)):
+            if i + 1 != len(lexList):
+                if lexList[i].lexemType == 'open_bracket':
+                    bracket_counter += 1
+                    if lexList[i + 1].lexemType == 'neg':
+                        continue
+                    elif lexList[i + 1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i + 1].lexemType == 'symbol':
+                        continue
+                    elif lexList[i + 1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'neg':
+                    if lexList[i + 1].lexemType == 'symbol' and lexList[i - 1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i + 1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'symbol':
+                    if (lexList[i + 1].lexemType == 'conjunction' or lexList[i + 1].lexemType == 'disjunction') and ( lexList[i - 1].lexemType == 'conjunction' or lexList[i - 1].lexemType == 'disjunction'):
+                        return False
+                    elif lexList[i + 1].lexemType == 'close_bracket' and (
+                            lexList[i - 1].lexemType == 'neg' or lexList[i - 1].lexemType == 'conjunction' or lexList[
+                        i - 1].lexemType == 'disjunction'):
+                        continue
+                    elif lexList[i + 1].lexemType == 'conjunction' or lexList[i + 1].lexemType == 'disjunction':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'constant':
+                    if lexList[i + 1].lexemType == 'close_bracket' and (
+                            lexList[i - 1].lexemType == 'neg' or lexList[i - 1].lexemType == 'conjunction' or lexList[i - 1].lexemType == 'disjunction'):
+                        continue
+                    elif lexList[i + 1].lexemType == 'conjunction' or lexList[i + 1].lexemType == 'disjunction':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'conjunction' or lexList[i].lexemType == 'disjunction':
+                    if i == 0 or i == 1:
+                        return False
+                    elif lexList[i + 1].lexemType == 'symbol':
+                        continue
+                    elif lexList[i + 1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i + 1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'close_bracket':
+                    bracket_counter -= 1
+                    if lexList[i + 1].lexemType == 'close_bracket':
+                        continue
+                    elif lexList[i + 1].lexemType == 'conjunction':
+                        continue
+                    else:
+                        return False
+            elif i + 1 == len(lexList):
+                if lexList[i].lexemType == 'close_bracket':
+                    bracket_counter -= 1
+                elif lexList[i].lexemType == 'constant':
+                    continue
+                elif lexList[i].lexemType == 'symbol':
+                    continue
+                else:
+                    return False
 
-with open("tests.csv", "r") as tests_file:
-    tests = tests_file.readlines()
-    for test in tests:
-        if test == "\n":
-            continue
-        formula, answer_string = test[0:-1].split(",")
-        lexList = lexAnalyze(formula, lexem_type)
-        test_answer: bool = True if answer_string == "True" else False
-        try:
-            parser_answer = is_formula(lexList)
-        except Exception as ex:
-            print(f"TestParserError: test failed: {tests.index(test)} error: {ex}")
-        if parser_answer != test_answer:
-            print(formula)
-            raise TestParserException(f"TestParserError: {tests.index(test)} "
-                                           f"test failed, parser answer: {parser_answer}, "
-                                           f"test answer: {test_answer}")
+        if bracket_counter != 0:
+            return False
+        return True
+    else:
+        return False
 
 
+input_string=input('Input string: ')
+lexList = lexAnalyze(input_string,lexem_type)
+for lex in lexList:
+    print(lex.lexemType + '  ::==  ' + lex.value)
+if is_CNF(lexList):
+    print('+ Formula is CNF +')
+else:
+    print('- Formula is not CNF -')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def formula(lexemList):
-#     pass
-# def unary_complex_formula(lexemList):
-#     lex = atom(lexemList)
-#     if
-# def binary_complex_formula(lexemList):
-#     pass
-#
-# def atom(lexemList):
-#     lex = lexemList.next()
-#     if lex.lexemType == 'symbol':
-#         return True
-#     elif lex.lexemType == 'open_bracket':
-#         formula(lexemList)
-#         lex = lexemList.next()
-#         if lex.lexemType != 'close_bracket':
-#             return False
-#     elif lex.lexemType == 'constant':
-#         return True
-
+# with open("tests.csv", "r") as tests_file:
+#     tests = tests_file.readlines()
+#     for test in tests:
+#         if test == "\n":
+#             continue
+#         formula, answer_string = test[0:-1].split(",")
+#         lexList = lexAnalyze(formula, lexem_type)
+#         test_answer: bool = True if answer_string == "True" else False
+#         try:
+#             parser_answer = is_formula(lexList)
+#         except Exception as ex:
+#             print(f"TestParserError: test failed: {tests.index(test)} error: {ex}")
+#         if parser_answer != test_answer:
+#             print(formula)
+#             raise TestParserException(f"TestParserError: {tests.index(test)} "
+#                                            f"test failed, parser answer: {parser_answer}, "
+#                                            f"test answer: {test_answer}")

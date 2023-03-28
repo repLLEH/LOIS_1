@@ -1,3 +1,8 @@
+# Лабораторная работа №1 по дисциплине "Логические основы интеллектуальных систем"
+# выполнена студентом группы 021703 БГУИР Смелов Алексей Александрович
+# Файл с описанием модуля анализатора сокращённого языка логики высказываний
+# 28.03.2023
+
 class Lexem:
     def __init__(self,lexem_type,input_string):
         self.lexemType = lexem_type
@@ -88,6 +93,8 @@ def is_formula(lexList):
                     return False
             elif lexList[i].lexemType == 'symbol':
                 if (lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence') and ( lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
+                    return False
+                elif lexList[i-1].lexemType == 'neg' and lexList[i+1].lexemType != 'close_bracket':
                     return False
                 elif lexList[i+1].lexemType == 'close_bracket' and (lexList[i-1].lexemType == 'neg' or lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
                     continue

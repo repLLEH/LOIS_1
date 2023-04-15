@@ -1,6 +1,7 @@
 # Лабораторная работа №1 по дисциплине "Логические основы интеллектуальных систем"
 # выполнена студентом группы 021703 БГУИР Смелов Алексей Александрович
 # Файл с описанием модуля анализатора сокращённого языка логики высказываний
+# Проверяет является ли формула сокращенного языка логики высказываний конъюктивной нормальной формой
 # 28.03.2023
 
 class Lexem:
@@ -63,88 +64,107 @@ def lexAnalyze(input_string,lexem_type):
 # formula : atom | binary_complex_formula | unary_complex_formula
 # unary_complex_formula :  unary_op atom
 # binary_complex_formula :  atom binary_connection atom
+def double_bracket_check(lexList):
+    operator_count = 0
+    for i in range(len(lexList)):
+        if lexList[i].lexemType == 'open_bracket':
+            if lexList[i + 1].lexemType == 'open_bracket':
+                for j in range(i+2,len(lexList)):
+                    if lexList[j].lexemType == 'conjunction' or lexList[j].lexemType == 'disjunction' or lexList[
+                        j].lexemType == 'implication' or lexList[j].lexemType == 'equivalence':
+                        operator_count+=1
+                    elif lexList[j].lexemType == 'close_bracket':
+                        if lexList[j+1].lexemType == 'close_bracket':
+                            break
+    if operator_count == 1:
+        return False
+    else: return True
+
+
 
 def is_formula(lexList):
-    bracket_counter = 0
-    if len(lexList) == 0:
-        return False
-    for i in range(len(lexList)):
-        if i + 1 != len(lexList):
-            if lexList[i].lexemType == 'open_bracket':
-                bracket_counter += 1
-                if lexList[i+1].lexemType == 'neg':
+    if double_bracket_check(lexList):
+        bracket_counter = 0
+        if len(lexList) == 0:
+            return False
+        for i in range(len(lexList)):
+            if i + 1 != len(lexList):
+                if lexList[i].lexemType == 'open_bracket':
+                    bracket_counter += 1
+                    if lexList[i+1].lexemType == 'neg':
+                        continue
+                    elif lexList[i+1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i+1].lexemType == 'symbol':
+                        continue
+                    elif lexList[i+1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'neg':
+                    if lexList[i+1].lexemType == 'symbol' and lexList[i-1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i+1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i+1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'symbol':
+                    if (lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence') and ( lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
+                        return False
+                    elif lexList[i-1].lexemType == 'neg' and lexList[i+1].lexemType != 'close_bracket':
+                        return False
+                    elif lexList[i+1].lexemType == 'close_bracket' and (lexList[i-1].lexemType == 'neg' or lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
+                        continue
+                    elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'constant':
+                    if lexList[i + 1].lexemType == 'close_bracket' and (
+                            lexList[i - 1].lexemType == 'neg' or lexList[i - 1].lexemType == 'conjunction' or lexList[
+                        i - 1].lexemType == 'disjunction' or lexList[i - 1].lexemType == 'implication' or lexList[
+                                i - 1].lexemType == 'equivalence'):
+                        continue
+                    elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'conjunction' or lexList[i].lexemType == 'disjunction' or lexList[i].lexemType == 'implication' or lexList[i].lexemType == 'equivalence':
+                    if i == 0 or i == 1:
+                        return False
+                    elif lexList[i+1].lexemType == 'symbol':
+                        continue
+                    elif lexList[i+1].lexemType == 'open_bracket':
+                        continue
+                    elif lexList[i+1].lexemType == 'constant':
+                        continue
+                    else:
+                        return False
+                elif lexList[i].lexemType == 'close_bracket':
+                    bracket_counter -= 1
+                    if lexList[i+1].lexemType == 'close_bracket':
+                        continue
+                    elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
+                        continue
+                    else:
+                        return False
+            elif i + 1 == len(lexList):
+                if lexList[i].lexemType == 'close_bracket':
+                    bracket_counter -= 1
+                elif lexList[i].lexemType == 'constant':
                     continue
-                elif lexList[i+1].lexemType == 'open_bracket':
+                elif lexList[i].lexemType == 'symbol':
                     continue
-                elif lexList[i+1].lexemType == 'symbol':
-                    continue
-                elif lexList[i+1].lexemType == 'constant':
-                    continue
-                else:
-                    return False
-            elif lexList[i].lexemType == 'neg':
-                if lexList[i+1].lexemType == 'symbol' and lexList[i-1].lexemType == 'open_bracket':
-                    continue
-                elif lexList[i+1].lexemType == 'open_bracket':
-                    continue
-                elif lexList[i+1].lexemType == 'constant':
-                    continue
-                else:
-                    return False
-            elif lexList[i].lexemType == 'symbol':
-                if (lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence') and ( lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
-                    return False
-                elif lexList[i-1].lexemType == 'neg' and lexList[i+1].lexemType != 'close_bracket':
-                    return False
-                elif lexList[i+1].lexemType == 'close_bracket' and (lexList[i-1].lexemType == 'neg' or lexList[i-1].lexemType == 'conjunction' or lexList[i-1].lexemType == 'disjunction' or lexList[i-1].lexemType == 'implication' or lexList[i-1].lexemType == 'equivalence'):
-                    continue
-                elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
-                    continue
-                else:
-                    return False
-            elif lexList[i].lexemType == 'constant':
-                if lexList[i + 1].lexemType == 'close_bracket' and (
-                        lexList[i - 1].lexemType == 'neg' or lexList[i - 1].lexemType == 'conjunction' or lexList[
-                    i - 1].lexemType == 'disjunction' or lexList[i - 1].lexemType == 'implication' or lexList[
-                            i - 1].lexemType == 'equivalence'):
-                    continue
-                elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
-                    continue
-                else:
-                    return False
-            elif lexList[i].lexemType == 'conjunction' or lexList[i].lexemType == 'disjunction' or lexList[i].lexemType == 'implication' or lexList[i].lexemType == 'equivalence':
-                if i == 0 or i == 1:
-                    return False
-                elif lexList[i+1].lexemType == 'symbol':
-                    continue
-                elif lexList[i+1].lexemType == 'open_bracket':
-                    continue
-                elif lexList[i+1].lexemType == 'constant':
-                    continue
-                else:
-                    return False
-            elif lexList[i].lexemType == 'close_bracket':
-                bracket_counter -= 1
-                if lexList[i+1].lexemType == 'close_bracket':
-                    continue
-                elif lexList[i+1].lexemType == 'conjunction' or lexList[i+1].lexemType == 'disjunction' or lexList[i+1].lexemType == 'implication' or lexList[i+1].lexemType == 'equivalence':
-                    continue
-                else:
-                    return False
-        elif i + 1 == len(lexList):
-            if lexList[i].lexemType == 'close_bracket':
-                bracket_counter -= 1
-            elif lexList[i].lexemType == 'constant':
-                continue
-            elif lexList[i].lexemType == 'symbol':
-                continue
 
-            else:
-                return False
+                else:
+                    return False
 
-    if bracket_counter != 0:
-        return False
-    return True
+        if bracket_counter != 0:
+            return False
+        return True
+    else: return False
 
 class TestParserException(Exception):
     pass
@@ -153,8 +173,16 @@ class TestParserException(Exception):
 # lexList = lexAnalyze(formula,lexem_type)
 # print(is_formula(lexList))
 def is_CNF(lexList):
+
     if is_formula(lexList):
         bracket_counter=0
+        conjuct_counter=0
+        # for i in range(len(lexList)):
+        #     if lexList[i].lexemType == 'conjunction':
+        #         conjuct_counter += 1
+        #         break
+        # if conjuct_counter == 0:
+        #     return False
         for i in range(len(lexList)):
             if i + 1 != len(lexList):
                 if lexList[i].lexemType == 'open_bracket':
@@ -196,6 +224,7 @@ def is_CNF(lexList):
                     else:
                         return False
                 elif lexList[i].lexemType == 'conjunction' or lexList[i].lexemType == 'disjunction':
+                    conjuct_counter+=1
                     if i == 0 or i == 1:
                         return False
                     elif lexList[i + 1].lexemType == 'symbol':
@@ -233,8 +262,8 @@ def is_CNF(lexList):
 
 input_string=input('Input string: ')
 lexList = lexAnalyze(input_string,lexem_type)
-for lex in lexList:
-    print(lex.lexemType + '  ::==  ' + lex.value)
+# for lex in lexList:
+#     print(lex.lexemType + '  ::==  ' + lex.value)
 if is_CNF(lexList):
     print('+ Formula is CNF +')
 else:
